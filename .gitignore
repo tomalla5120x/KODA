@@ -34,4 +34,5 @@
 # VS
 *.sdf
 *.opensdf
+*.props
 x64
