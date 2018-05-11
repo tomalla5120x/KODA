@@ -198,6 +198,9 @@ double HuffmanTreeBuilder::getEntropy() const
 
 	for(auto it = m_weights.begin(); it != m_weights.end(); ++it)
 	{
+		if((*it) == 0)
+			continue;
+
 		double p = 1.0 * (*it) / m_totalSymbols;
 		entropy -= p * log2(p);
 	}
