@@ -5,33 +5,26 @@
 #include "tree.h"
 using namespace std;
 
-#define SYMBOLS_COUNT 255
+#define MAX_SYMBOL_INDEX 255
 
-
-void saveHeader(vector<unsigned int>& bitLengths, ostream& out) {
-	for (std::vector<unsigned int>::iterator it = bitLengths.begin(); it != bitLengths.end(); ++it) {
-		unsigned int intvalue = *it;
-		vector< unsigned char> bitLenghtCharBuffor(1);
-		memcpy(&bitLenghtCharBuffor[0], &intvalue, 1);
-		unsigned char  bitLenghtChar = bitLenghtCharBuffor[0];
-		out.put(bitLenghtChar);
-		bitLenghtCharBuffor.clear();
-	}
-}
-
-Result<CompressionStats> compress_classic(const unsigned char* inDataBuffer, unsigned int bufferSize, ostream& out)
-{
+Result<CompressionStats> compress_classic(const unsigned char* inDataBuffer, unsigned int bufferSize, ostream& out) {
 	vector<unsigned int> bitLengths;
-	vector<unsigned char> outBites;
 
-	HuffmanTreeBuilder newTree(SYMBOLS_COUNT);
+	HuffmanTreeBuilder newTree(MAX_SYMBOL_INDEX);
 	for (unsigned int i = 0; i < bufferSize; ++i) {	
 		newTree.addSymbol(inDataBuffer[i]);
 	}
 	newTree.getBitLengths(bitLengths);
-	saveHeader(bitLengths, out);
+	for (std::vector<unsigned int>::iterator it = bitLengths.begin(); it != bitLengths.end(); ++it) {
+		out.put(*it);
+	}
 	HuffmanTreeEncoder encoder(bitLengths);
-	compressByUsedBits(inDataBuffer, bufferSize, encoder, out);
+	BitStreamManager bitStreamManager(out);
+	for (unsigned int i = 0; i < bufferSize; ++i) {
+		Code code = encoder.getCode((unsigned int)inDataBuffer[i]);
+		bitStreamManager.addCode(code);
+	}
+	bitStreamManager.finish();
 	
 	CompressionStats stats;
 	stats.entropy = newTree.getEntropy();
@@ -40,22 +33,22 @@ Result<CompressionStats> compress_classic(const unsigned char* inDataBuffer, uns
 		meanBitLengths += bitLengths[inDataBuffer[i]];
 	}
 	stats.meanBitLength = meanBitLengths / bufferSize;
-	stats.headerSize = SYMBOLS_COUNT;
+	stats.headerSize = MAX_SYMBOL_INDEX + 1;
 
 	return {true, stats};
 }
 
+bool decompress_classic(istream& in, unsigned char* outDataBuffer, unsigned int bufferSize) {
+	
+	vector<unsigned int> bitLengths;
 
-bool decompress_classic(istream& in, unsigned char* outDataBuffer, unsigned int bufferSize)
-{
-	// STUB: (brak kompresji)
-
-	for(unsigned int i = 0; i < bufferSize; ++i)
-	{
+//	HuffmanTreeDecoder decoder(bitLengths);
+	
+	for(unsigned int i = 0; i < bufferSize; ++i) {
+		
 		unsigned char byte = in.get();
 
-		if(byte == EOF)
-		{
+		if(byte == EOF) {
 			cerr << "Unexpected end of file." << endl;
 			return false;
 		}

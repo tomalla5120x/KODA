@@ -7,6 +7,17 @@
 
 using namespace std;
 
-void compressByUsedBits(const unsigned char* inDataBuffer, unsigned int bufferSize, HuffmanTreeEncoder& encoder, ostream& out);
+class BitStreamManager
+{
+public:
+	BitStreamManager(ostream& out);
+	void addCode(Code code);
+	void finish();
+
+private:
+	ostream& out;
+	int freeBits = 8;
+	char currChar = '\0';
+};
 
 #endif
