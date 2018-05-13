@@ -6,8 +6,9 @@ BitStreamManager::BitStreamManager(ostream& out) : out(out), freeBits(8), currCh
 
 void BitStreamManager::addCode(Code code){
 	int bitsToSave = 8;
+	
 	for (unsigned int j = 0; j < code.bytes.size(); ++j) {	//petla po wszystkich bajtach danego s³owa kodowego
-		char currCode = code.bytes[j];
+		unsigned char currCode = code.bytes[j];
 		if (j == (code.bytes.size() - 1)) {		//warunek dla ostatnigo bajtu, dla ktorego mo¿e byæ brana pod uwage tylko czêœæ bitów  
 			bitsToSave = code.lastByteBitsUsed;
 			currCode = currCode >> (8 - bitsToSave);
