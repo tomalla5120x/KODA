@@ -19,7 +19,7 @@ Result<CompressionStats> compress_classic(const unsigned char* inDataBuffer, uns
 		out.put(*it);
 	}
 	HuffmanTreeEncoder encoder(bitLengths);
-	BitStreamManager bitStreamManager(out);
+	BitStreamWriter bitStreamManager(out);
 	for (unsigned int i = 0; i < bufferSize; ++i) {
 		Code code = encoder.getCode((unsigned int)inDataBuffer[i]);
 		bitStreamManager.addCode(code);
@@ -53,31 +53,17 @@ bool decompress_classic(istream& in, unsigned char* outDataBuffer, unsigned int 
 	}
 
 	HuffmanTreeDecoder decoder(bitLengths);
+	BitStreamReader bitStreamReader(in);
+
+
 	int i = 0;
 	auto node = decoder.getRoot();
 	while(in) {
-		unsigned char byte = in.get();
-		for (int j = 7; j >= 0; --j) {
-			if (((byte >> j) & 0x1) == 0x1) {
-				node = node->traverseOne();
-			}
-			else {
-				node = node->traverseZero();
-			}
-			if (node->isLeaf()){
-				int symbol = node->getSymbol();
-				outDataBuffer[i] = (char) symbol;
-				if (i == bufferSize) {
-					break;
-				}
-				i++;
-				node = decoder.getRoot();
-			}
+		if (i == bufferSize) {
+			break;
 		}
-		if(byte == EOF) {
-			cerr << "Unexpected end of file." << endl;
-			return false;
-		}
+		outDataBuffer[i] = (char)bitStreamReader.nextSymbol(decoder);
+		i++;
 	}	
 	return true;
 }

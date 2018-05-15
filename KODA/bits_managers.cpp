@@ -1,10 +1,10 @@
-#include "compression.h"
+#include "bits_managers.h"
 
 using namespace std;
 
-BitStreamManager::BitStreamManager(ostream& out) : out(out), freeBits(8), currChar('\0') {}
+BitStreamWriter::BitStreamWriter(ostream& out) : out(out), freeBits(8), currChar('\0') {}
 
-void BitStreamManager::addCode(Code code){
+void BitStreamWriter::addCode(Code code){
 	int bitsToSave = 8;
 	
 	for (unsigned int j = 0; j < code.bytes.size(); ++j) {	//petla po wszystkich bajtach danego s³owa kodowego
@@ -32,7 +32,38 @@ void BitStreamManager::addCode(Code code){
 	}
 }
 
-void BitStreamManager::finish() {
+void BitStreamWriter::finish() {
 	if (freeBits < 8)
 		out.put(currChar);
+}
+
+
+BitStreamReader::BitStreamReader(istream& in) : in(in), bitsLeft(0), currByte('\0') {}
+
+unsigned int BitStreamReader::nextSymbol(HuffmanTreeDecoder& decoder){
+	auto node = decoder.getRoot();
+	while (1) {
+		if (bitsLeft == 0){
+			currByte = in.get();
+			if (currByte == EOF) {
+				cerr << "Unexpected end of file." << endl;
+				return false;
+			}
+			bitsLeft = 8;
+		}
+		for (int j = bitsLeft - 1; j >= 0; --j) {
+			if (((currByte >> j) & 0x1) == 0x1) {
+				node = node->traverseOne();
+				bitsLeft--;
+			}
+			else {
+				node = node->traverseZero();
+				bitsLeft--;
+			}
+			if (node->isLeaf()){
+				unsigned int symbol = node->getSymbol();
+				return symbol;
+			}
+		}
+	}
 }
