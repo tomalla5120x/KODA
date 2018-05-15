@@ -33,7 +33,6 @@ Result<CompressionStats> compress_classic(const unsigned char* inDataBuffer, uns
 		meanBitLengths += bitLengths[inDataBuffer[i]];
 	}
 	stats.meanBitLength = meanBitLengths / bufferSize;
-	cout << stats.meanBitLength << endl;
 	stats.headerSize = MAX_SYMBOL_INDEX + 1;
 
 	return {true, stats};
@@ -55,15 +54,20 @@ bool decompress_classic(istream& in, unsigned char* outDataBuffer, unsigned int 
 	HuffmanTreeDecoder decoder(bitLengths);
 	BitStreamReader bitStreamReader(in);
 
-
 	int i = 0;
 	auto node = decoder.getRoot();
 	while(in) {
 		if (i == bufferSize) {
 			break;
 		}
-		outDataBuffer[i] = (char)bitStreamReader.nextSymbol(decoder);
-		i++;
+		try {
+			outDataBuffer[i] = (unsigned char)bitStreamReader.nextSymbol(decoder);
+			i++;
+		}
+		catch (runtime_error& e){
+			cerr << e.what() << endl;
+			return false;
+		}
 	}	
 	return true;
 }
