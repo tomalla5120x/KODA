@@ -42,7 +42,6 @@ BitStreamReader::BitStreamReader(istream& in) : in(in), bitsLeft(0), currByte('\
 
 unsigned int BitStreamReader::nextSymbol(HuffmanTreeDecoder& decoder){
 	auto node = decoder.getRoot();
-	throw runtime_error("Unexpected end of file");
 	while (1) {
 		if (bitsLeft == 0){
 			currByte = in.get();

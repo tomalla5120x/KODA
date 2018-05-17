@@ -1,41 +1,101 @@
-#ifndef CODEC_BLOCK_H
+﻿#ifndef CODEC_BLOCK_H
 #define CODEC_BLOCK_H
 
 #include "codec_block.h"
+#include "tree.h"
+#include "bits_managers.h"
+#include <bitset>
 
 using namespace std;
+using namespace Utils;
+
+#define MAX_SYMBOL_INDEX 65535
 
 Result<CompressionStats> compress_block(const unsigned char* inDataBuffer, unsigned int bufferSize, ostream& out)
 {
-	// STUB: (brak kompresji)
+	HuffmanTreeBuilder newTree(MAX_SYMBOL_INDEX);
 
-	for(unsigned int i = 0; i < bufferSize; ++i)
-		out.put(inDataBuffer[i]);
+	unsigned int doublesymbol;
+	vector<unsigned int> inDataBufferDoublesymbols;
+
+	for (unsigned int i = 0; i < bufferSize; ++i){
+	doublesymbol = inDataBuffer[i] << 8;
+	doublesymbol = doublesymbol | inDataBuffer[++i];
+	newTree.addSymbol(doublesymbol);
+	inDataBufferDoublesymbols.push_back(doublesymbol);
+	}
+
+	vector<unsigned int> bitLengths;
+	newTree.getBitLengths(bitLengths);
+
+	for (std::vector<unsigned int>::iterator it = bitLengths.begin(); it != bitLengths.end(); ++it) {
+		uint16Write(out, *it);
+	}
+
+
+	HuffmanTreeEncoder encoder(bitLengths);
+	BitStreamWriter bitStreamManager(out);
+	for (unsigned int i = 0; i < inDataBufferDoublesymbols.size(); ++i) {
+		Code code = encoder.getCode((unsigned int)inDataBufferDoublesymbols[i]);
+		bitStreamManager.addCode(code);
+	}
+	bitStreamManager.finish();
+
 
 	CompressionStats stats;
-	stats.entropy = 3.4;
-	stats.meanBitLength = 3.65;
-	stats.headerSize = 23;
+
+	double meanBitLengths = 0.0;
+	for (unsigned int i = 0; i < inDataBufferDoublesymbols.size(); ++i) {
+		meanBitLengths += bitLengths[inDataBufferDoublesymbols[i]];
+	}
+	meanBitLengths = meanBitLengths / inDataBufferDoublesymbols.size();
+	double entropy = newTree.getEntropy() / 2;
+
+	stats.entropy = entropy;
+	stats.meanBitLength = meanBitLengths;
+	stats.headerSize = 131072;
 	return{ true, stats };
 }
 
 bool decompress_block(istream& in, unsigned char* outDataBuffer, unsigned int bufferSize)
 {
-	// STUB: (brak kompresji)
+	vector<unsigned int> bitLengths;
 
-	for(unsigned int i = 0; i < bufferSize; ++i)
-	{
+	unsigned char inBytes[2];
+	for (unsigned int i = 0; i < 65536; ++i) {
 		unsigned char byte = in.get();
-
-		if(byte == EOF)
-		{
+		unsigned char byte2 = in.get();
+		if (byte == EOF || byte2 == EOF) {
 			cerr << "Unexpected end of file." << endl;
 			return false;
 		}
-
-		outDataBuffer[i] = byte;
+		inBytes[0]= byte;
+		inBytes[1]= byte2;
+		bitLengths.push_back(uint16Read(inBytes));
 	}
 
+	HuffmanTreeDecoder decoder(bitLengths);
+	BitStreamReader bitStreamReader(in);
+
+	int i = 0;
+	auto node = decoder.getRoot();
+	while (in) {
+		if (i == bufferSize) {
+			break;
+		}
+		try {
+			unsigned int symbol = bitStreamReader.nextSymbol(decoder);
+			unsigned char symbolFirst = symbol >> 8;
+			unsigned char symbolSecond = symbol & 255;
+			outDataBuffer[i] = symbolFirst;
+			outDataBuffer[++i] = symbolSecond;
+			i++;
+		}
+		catch (runtime_error& e) {
+			cerr << e.what() << endl;
+			return false;
+		}
+	}
 	return true;
 }
 
