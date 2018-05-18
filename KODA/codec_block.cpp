@@ -20,7 +20,9 @@ Result<CompressionStats> compress_block(const unsigned char* inDataBuffer, unsig
 
 	for (unsigned int i = 0; i < bufferSize; ++i){
 	doublesymbol = inDataBuffer[i] << 8;
-	doublesymbol = doublesymbol | inDataBuffer[++i];
+	if (bufferSize % 2 == 0 || (bufferSize % 2 == 1 && i < bufferSize - 1)) {
+		doublesymbol = doublesymbol | inDataBuffer[++i];
+	}
 	newTree.addSymbol(doublesymbol);
 	inDataBufferDoublesymbols.push_back(doublesymbol);
 	}
@@ -48,7 +50,7 @@ Result<CompressionStats> compress_block(const unsigned char* inDataBuffer, unsig
 	for (unsigned int i = 0; i < inDataBufferDoublesymbols.size(); ++i) {
 		meanBitLengths += bitLengths[inDataBufferDoublesymbols[i]];
 	}
-	meanBitLengths = meanBitLengths / inDataBufferDoublesymbols.size();
+	meanBitLengths = meanBitLengths / bufferSize;
 	double entropy = newTree.getEntropy() / 2;
 
 	stats.entropy = entropy;
@@ -62,7 +64,7 @@ bool decompress_block(istream& in, unsigned char* outDataBuffer, unsigned int bu
 	vector<unsigned int> bitLengths;
 
 	unsigned char inBytes[2];
-	for (unsigned int i = 0; i < 65536; ++i) {
+	for (unsigned int i = 0; i <= MAX_SYMBOL_INDEX; ++i) {
 		unsigned char byte = in.get();
 		unsigned char byte2 = in.get();
 		if (byte == EOF || byte2 == EOF) {
@@ -86,9 +88,11 @@ bool decompress_block(istream& in, unsigned char* outDataBuffer, unsigned int bu
 		try {
 			unsigned int symbol = bitStreamReader.nextSymbol(decoder);
 			unsigned char symbolFirst = symbol >> 8;
-			unsigned char symbolSecond = symbol & 255;
 			outDataBuffer[i] = symbolFirst;
-			outDataBuffer[++i] = symbolSecond;
+			if (bufferSize % 2 == 0 || (bufferSize % 2 == 1 && i < bufferSize - 1)) {
+				unsigned char symbolSecond = symbol & 255;
+				outDataBuffer[++i] = symbolSecond;
+			}
 			i++;
 		}
 		catch (runtime_error& e) {
