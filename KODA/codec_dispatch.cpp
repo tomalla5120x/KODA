@@ -98,6 +98,8 @@ bool dispatch_compress(istream& in, ostream& out, Configuration& config)
 	cout << "Mean bit length: " << result.result.meanBitLength << endl;
 	cout << "Compressed file size efficiency: " << (1.0 * inputSize / out.tellp()) << endl;
 	cout << "Compressed data efficiency: " << (1.0 * pixelsCount / ((unsigned int)out.tellp() - compressionOffset - result.result.headerSize)) << endl;
+	cout << "Compressed file space savings(cp): " << (1.0 - 1.0 * out.tellp() / inputSize) * 100 << endl;
+	cout << "Compressed data space savings(cp): " << (1.0 - 1.0 * ((unsigned int)out.tellp() - compressionOffset - result.result.headerSize) / pixelsCount) * 100 << endl;
 
 	return true;
 }
