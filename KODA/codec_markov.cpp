@@ -7,6 +7,7 @@
 using namespace std;
 
 #define MAX_SYMBOL_INDEX 255
+#define START_CONTEXT 0
 
 Result<CompressionStats> compress_markov(const unsigned char* inDataBuffer, unsigned int bufferSize, ostream& out)
 {
@@ -22,6 +23,7 @@ Result<CompressionStats> compress_markov(const unsigned char* inDataBuffer, unsi
 		tree.emplace_back(MAX_SYMBOL_INDEX);
 	}
 
+	tree[START_CONTEXT].addSymbol(inDataBuffer[0]);
 	for (unsigned int i = 0; i < bufferSize - 1; ++i) {
 		currentSymbol = inDataBuffer[i];
 		nextSymbol = inDataBuffer[i + 1];
@@ -36,9 +38,10 @@ Result<CompressionStats> compress_markov(const unsigned char* inDataBuffer, unsi
 		encoder.emplace_back(bitLengths[i]);
 	}
 	
-	out.put(inDataBuffer[0]);
-	sumBitLen = 8;
 	BitStreamWriter bitStreamManager(out);
+	Code startCode = encoder[START_CONTEXT].getCode((unsigned int)inDataBuffer[0]);
+	bitStreamManager.addCode(startCode);
+	sumBitLen = bitLengths[START_CONTEXT][inDataBuffer[0]];
 	for (unsigned int i = 0; i < bufferSize - 1; ++i) {
 		currentSymbol = inDataBuffer[i];
 		nextSymbol = inDataBuffer[i + 1];
@@ -79,11 +82,9 @@ bool decompress_markov(istream& in, unsigned char* outDataBuffer, unsigned int b
 		decoder.emplace_back(bitLengths[i]);
 	}
 
-	unsigned char currentSymbol = in.get();
 	BitStreamReader bitStreamReader(in);
-	outDataBuffer[0] = currentSymbol;
-
-	for (unsigned int i = 1; i < bufferSize; ++i) {
+	unsigned char currentSymbol = START_CONTEXT;
+	for (unsigned int i = 0; i < bufferSize; ++i) {
 		try {
 			currentSymbol = (unsigned char)bitStreamReader.nextSymbol(decoder[currentSymbol]);
 			outDataBuffer[i] = currentSymbol;
