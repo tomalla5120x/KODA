@@ -39,6 +39,12 @@
     <ClCompile Include="codec_dispatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bits_managers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tree.h">
@@ -63,6 +69,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="codec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bits_managers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

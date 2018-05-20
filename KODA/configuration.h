@@ -17,6 +17,7 @@ class Configuration
 public:
 	Configuration(): m_isHelp(false),
 		m_histogramPath(""),
+		m_isHistogramBinary(false),
 		m_outputPath(""),
 		m_inputPath(""),
 		m_compressionType(CompressionType::NONE) {}
@@ -27,6 +28,10 @@ public:
 
 	bool isHistogramPath() const {
 		return !m_histogramPath.empty();
+	}
+
+	bool isHistogramBinary() const {
+		return m_isHistogramBinary;
 	}
 
 	std::string getHistogramPath() const {
@@ -53,6 +58,9 @@ private:
 
 	// œcie¿ka pod któr¹ zostanie zapisany histogram
 	std::string m_histogramPath;
+
+	// czy histogram jest w postaci rysunku czy tekstu
+	bool m_isHistogramBinary;
 
 	// œcie¿ka pliku wejœciowego
 	std::string m_inputPath;

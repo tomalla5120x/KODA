@@ -153,22 +153,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bits_managers.cpp" />
     <ClCompile Include="codec_dispatch.cpp" />
     <ClCompile Include="codec_block.cpp" />
     <ClCompile Include="codec_classic.cpp" />
     <ClCompile Include="codec_markov.cpp" />
     <ClCompile Include="configuration.cpp" />
+    <ClCompile Include="image_utils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="tree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bits_managers.h" />
     <ClInclude Include="codec.h" />
     <ClInclude Include="codec_dispatch.h" />
     <ClInclude Include="codec_block.h" />
     <ClInclude Include="codec_classic.h" />
     <ClInclude Include="codec_markov.h" />
     <ClInclude Include="configuration.h" />
+    <ClInclude Include="image_utils.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="tree.h" />
   </ItemGroup>

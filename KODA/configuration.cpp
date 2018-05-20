@@ -132,6 +132,12 @@ bool ConfigurationManager::handleOption(Configuration& config)
 		return true;
 	}
 
+	if(param == "-b" || param == "--histogrambinary")
+	{
+		config.m_isHistogramBinary = true;
+		return true;
+	}
+
 	if(param == "-g" || param == "--histogram")
 		return getString(config.m_histogramPath, param);
 
@@ -177,6 +183,10 @@ void ConfigurationManager::listHelp(ostream& out)
 	out << "\t-g, --histogram = path" << endl;
 	out << "\t\tThe path to the file where the histogram of the original image will be output." << endl;
 	out << "\t\tDefault: no histogram is generated." << endl;
+	out << endl;
+	out << "\t-b, --histogrambinary" << endl;
+	out << "\t\tThe flag indicating that the histogram should be an image." << endl;
+	out << "\t\tDefault: histogram is a list of occurences of each pixel value in plain text form." << endl;
 	out << endl;
 	out << "\t-i, --input = path" << endl;
 	out << "\t\tThe path to the input file (PGM file or compressed PGM file)." << endl;

@@ -4,6 +4,7 @@
 
 #include "codec_dispatch.h"
 #include "utils.h"
+#include "image_utils.h"
 
 #include "codec_classic.h"
 #include "codec_block.h"
@@ -27,15 +28,7 @@ bool dispatch_compress(istream& in, ostream& out, Configuration& config)
 		return false;
 	}
 
-	in.seekg(0, ios_base::end);
-	unsigned int inputSize = (unsigned int)in.tellg();
-
-	unique_ptr<unsigned char[]> buffer = make_unique<unsigned char[]>(inputSize);
-	in.seekg(0);
-	in.read((char*)buffer.get(), inputSize);
-
-	Mat rawData(1, inputSize, CV_8UC1, (void*)buffer.get());
-	Mat decodedImage = imdecode(rawData, IMREAD_GRAYSCALE);
+	Mat decodedImage = ImageUtils::pixelsRead(in);
 
 	if(decodedImage.empty())
 	{
@@ -94,6 +87,9 @@ bool dispatch_compress(istream& in, ostream& out, Configuration& config)
 
 	out.seekp(0, ios_base::end);
 
+	in.seekg(0, ios_base::end);
+	unsigned int inputSize = (unsigned int)in.tellg();
+
 	cout << "Model entropy: " << result.result.entropy << endl;
 	cout << "Mean bit length: " << result.result.meanBitLength << endl;
 	cout << "Compressed file size efficiency: " << (1.0 * inputSize / out.tellp()) << endl;
@@ -138,21 +134,11 @@ bool dispatch_decompress(istream& in, ostream& out, Configuration& config)
 	if(!decompressionResult)
 		return false;
 
-	vector<int> compressionParams;
-
-	compressionParams.push_back(IMWRITE_PXM_BINARY);
-	compressionParams.push_back(1);
-
-	Mat pixelDataMat(height, width, CV_8UC1, pixelData.get());
-	vector<unsigned char> encodedImage;
-
-	if(!imencode(".pgm", pixelDataMat, encodedImage, compressionParams))
+	if(!ImageUtils::pixelsWrite(pixelData.get(), width, height, out))
 	{
 		cerr << "Error encoding output image." << endl;
 		return false;
 	}
-	
-	out.write((const char*)&encodedImage[0], encodedImage.size());
 
 	return true;
 }

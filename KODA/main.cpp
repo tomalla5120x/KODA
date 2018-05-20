@@ -3,8 +3,44 @@
 #include <string>
 
 #include "codec_dispatch.h"
+#include "image_utils.h"
+
+#include <opencv2/imgproc.hpp>
 
 using namespace std;
+using namespace cv;
+
+void outputHistogram(istream& in, ostream& out, bool isBinary)
+{
+	unsigned int buckets[256] = { 0 };
+	
+	Mat pixelDataMat = ImageUtils::pixelsRead(in);
+	const unsigned char* pixelData = pixelDataMat.ptr();
+	unsigned int pixelsCount = pixelDataMat.rows * pixelDataMat.cols;
+
+	for(unsigned int i = 0; i < pixelsCount; ++i)
+		++buckets[pixelData[i]];
+
+	if(!isBinary)
+	{
+		for(unsigned int i = 0; i < 256; ++i)
+			out << buckets[i] << endl;
+	} else
+	{
+		unsigned int maxCount = 0;
+
+		for(unsigned int i = 0; i < 256; ++i)
+			if(buckets[i] > maxCount)
+				maxCount = buckets[i];
+
+		Mat histMat = Mat::ones(256, 256, CV_8U)*255;
+
+		for(unsigned int i = 0; i < 256; ++i)
+			line(histMat, Point(i, 255 - (256 * buckets[i] / maxCount)), Point(i, 255), Scalar(100, 100, 100), 1, LINE_8);
+
+		ImageUtils::pixelsWrite(histMat.ptr(), histMat.cols, histMat.rows, out);
+	}
+}
 
 bool run(int argc, char** argv)
 {
@@ -37,7 +73,28 @@ bool run(int argc, char** argv)
 		return false;
 	}
 
-	return dispatch(fInput, fOutput, config);
+	if(!dispatch(fInput, fOutput, config))
+		return false;
+
+	if(config.isHistogramPath())
+	{
+		ofstream fOutputHist;
+
+		if(config.isHistogramBinary())
+			fOutputHist.open(config.getHistogramPath(), ios::out | ios::binary | ios::trunc);
+		else
+			fOutputHist.open(config.getHistogramPath(), ios::out | ios::trunc);
+
+		if(!fOutputHist.good())
+		{
+			cerr << "Could not open file for writing: " << config.getHistogramPath() << endl;
+			return false;
+		}
+
+		outputHistogram(fInput, fOutputHist, config.isHistogramBinary());
+	}
+
+	return true;
 }
 
 int main(int argc, char** argv)
