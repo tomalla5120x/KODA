@@ -1,6 +1,3 @@
-#ifndef CODEC_MARKOV_H
-#define CODEC_MARKOV_H
-
 #include "codec_markov.h"
 #include "tree.h"
 #include <deque>
@@ -97,5 +94,3 @@ bool decompress_markov(istream& in, unsigned char* outDataBuffer, unsigned int b
 
 	return true;
 }
-
-#endif

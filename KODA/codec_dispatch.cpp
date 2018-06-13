@@ -1,6 +1,8 @@
 #include <memory>
+#include <fstream>
 
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include "codec_dispatch.h"
 #include "utils.h"
@@ -19,6 +21,39 @@ using namespace std;
 #define HEADER_COMPRESS_CLASSIC 0x01
 #define HEADER_COMPRESS_BLOCK   0x02
 #define HEADER_COMPRESS_MARKOV  0x03
+
+void outputHistogram(istream& in, ostream& out, bool isBinary)
+{
+	unsigned int buckets[256] = { 0 };
+
+	Mat pixelDataMat = ImageUtils::pixelsRead(in);
+	const unsigned char* pixelData = pixelDataMat.ptr();
+	unsigned int pixelsCount = pixelDataMat.rows * pixelDataMat.cols;
+
+	for(unsigned int i = 0; i < pixelsCount; ++i)
+		++buckets[pixelData[i]];
+
+	if(!isBinary)
+	{
+		for(unsigned int i = 0; i < 256; ++i)
+			out << buckets[i] << endl;
+	}
+	else
+	{
+		unsigned int maxCount = 0;
+
+		for(unsigned int i = 0; i < 256; ++i)
+			if(buckets[i] > maxCount)
+				maxCount = buckets[i];
+
+		Mat histMat = Mat::ones(256, 256, CV_8U) * 255;
+
+		for(unsigned int i = 0; i < 256; ++i)
+			line(histMat, Point(i, 255 - (256 * buckets[i] / maxCount)), Point(i, 255), Scalar(100, 100, 100), 1, LINE_8);
+
+		ImageUtils::pixelsWrite(histMat.ptr(), histMat.cols, histMat.rows, out);
+	}
+}
 
 bool dispatch_compress(istream& in, ostream& out, Configuration& config)
 {
@@ -96,6 +131,26 @@ bool dispatch_compress(istream& in, ostream& out, Configuration& config)
 	cout << "Compressed data efficiency: " << (1.0 * pixelsCount / ((unsigned int)out.tellp() - compressionOffset - result.result.headerSize)) << endl;
 	cout << "Compressed file space savings(cp): " << (1.0 - 1.0 * out.tellp() / inputSize) * 100 << endl;
 	cout << "Compressed data space savings(cp): " << (1.0 - 1.0 * ((unsigned int)out.tellp() - compressionOffset - result.result.headerSize) / pixelsCount) * 100 << endl;
+
+	// ----- histogram -------
+
+	if(config.isHistogramPath())
+	{
+		ofstream fOutputHist;
+
+		if(config.isHistogramBinary())
+			fOutputHist.open(config.getHistogramPath(), ios::out | ios::binary | ios::trunc);
+		else
+			fOutputHist.open(config.getHistogramPath(), ios::out | ios::trunc);
+
+		if(!fOutputHist.good())
+		{
+			cerr << "Could not open file for writing: " << config.getHistogramPath() << endl;
+			return false;
+		}
+
+		outputHistogram(in, fOutputHist, config.isHistogramBinary());
+	}
 
 	return true;
 }

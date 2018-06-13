@@ -1,7 +1,4 @@
-﻿#ifndef CODEC_BLOCK_H
-#define CODEC_BLOCK_H
-
-#include "codec_block.h"
+﻿#include "codec_block.h"
 #include "tree.h"
 #include "bits_managers.h"
 #include <bitset>
@@ -102,5 +99,3 @@ bool decompress_block(istream& in, unsigned char* outDataBuffer, unsigned int bu
 	}
 	return true;
 }
-
-#endif

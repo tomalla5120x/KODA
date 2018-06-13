@@ -1,6 +1,3 @@
-#ifndef CODEC_CLASSIC_H
-#define CODEC_CLASSIC_H
-
 #include "codec_classic.h"
 #include "tree.h"
 using namespace std;
@@ -71,5 +68,3 @@ bool decompress_classic(istream& in, unsigned char* outDataBuffer, unsigned int 
 	}	
 	return true;
 }
-
-#endif
