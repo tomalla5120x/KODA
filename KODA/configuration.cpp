@@ -182,10 +182,12 @@ void ConfigurationManager::listHelp(ostream& out)
 	out << endl;
 	out << "\t-g, --histogram = path" << endl;
 	out << "\t\tThe path to the file where the histogram of the original image will be output." << endl;
+	out << "\t\tThe parameter is ignored when decompressing a file." << endl;
 	out << "\t\tDefault: no histogram is generated." << endl;
 	out << endl;
 	out << "\t-b, --histogrambinary" << endl;
 	out << "\t\tThe flag indicating that the histogram should be an image." << endl;
+	out << "\t\tThe parameter is ignored when decompressing a file." << endl;
 	out << "\t\tDefault: histogram is a list of occurences of each pixel value in plain text form." << endl;
 	out << endl;
 	out << "\t-i, --input = path" << endl;
@@ -196,7 +198,7 @@ void ConfigurationManager::listHelp(ostream& out)
 	out << "\t\tThe path to the output file." << endl;
 	out << "\t\tThis parameter is mandatory." << endl;
 	out << endl;
-	out << "\t-c or --compression = algorithm" << endl;
+	out << "\t-c, --compression = algorithm" << endl;
 	out << "\t\tThe algorithm to be used for compression." << endl;
 	out << "\t\tPossible values:" << endl;
 	out << "\t\t\t1 - the classing Huffman encoding" << endl;
