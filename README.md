@@ -1,4 +1,7 @@
 # KODA
+
+(**English note**) This if the repository for a collaborative university project of ours dedicated to data compression algorithms. The class has already finished and as such this repo is no longer of use anymore and is now archived. Feel free to inspect it though. Note however that the project is entirely in Polish.
+
 ## Konfigurowanie projektu
 1. Ściągnij odpowiednią wersję OpenCV:
   * w przypadku Visual 2017 lub 2015, ściągnij wersję 3.4.0
